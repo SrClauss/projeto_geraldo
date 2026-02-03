@@ -1,0 +1,141 @@
+.dashboard-container {
+  width: 100%;
+  max-width: 1600px;
+}
+
+.dashboard-header {
+  margin-bottom: 32px;
+}
+
+.dashboard-subtitle {
+  font-size: 16px;
+  color: #605e5c;
+  margin-top: 8px;
+}
+
+.processos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .processos-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.processo-card {
+  background: white;
+  border: 1px solid #edebe9;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.processo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.processo-card-header {
+  padding: 20px;
+  background: #faf9f8;
+  border-bottom: 1px solid #edebe9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.processo-card-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #323130;
+  flex: 1;
+  word-break: break-word;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-badge.em {
+  background: #d1e7fd;
+  color: #004578;
+}
+
+.status-badge.andamento {
+  background: #d1e7fd;
+  color: #004578;
+}
+
+.processo-card-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f2f1;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row .label {
+  font-size: 14px;
+  color: #605e5c;
+}
+
+.info-row .value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #323130;
+}
+
+.info-row .value.erro {
+  font-size: 18px;
+}
+
+.info-row .value.erro.positivo {
+  color: #d13438;
+}
+
+.info-row .value.erro.negativo {
+  color: #107c10;
+}
+
+.processo-card-footer {
+  padding: 20px;
+  background: #faf9f8;
+  border-top: 1px solid #edebe9;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 64px 24px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #edebe9;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #605e5c;
+  margin-bottom: 24px;
+}
