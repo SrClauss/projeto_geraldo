@@ -38,49 +38,60 @@ impl Processo {
         for sprint in &self.sprints {
             for item in &sprint.itens {
                 let id = item.item.id.clone();
-                let divergence = item.divergence();
+                // Encontra o peso base na fórmula
+                let base_weight = self.formula.itens.iter()
+                    .find(|fi| fi.item.id == id)
+                    .map(|fi| fi.peso)
+                    .unwrap_or(0.0);
+                // Erro = actual - base_weight
+                let error = match item.actual {
+                    Some(actual) => {
+                        let err = actual - base_weight;
+                        println!("📊 Sprint {}, Item {}: actual={:.2}, base={:.2}, erro={:.2}", 
+                                 sprint.numero, item.item.nome, actual, base_weight, err);
+                        err
+                    },
+                    None => 0.0,
+                };
                 let entry = acc.entry(id).or_insert(0.0);
-                *entry += divergence;
+                *entry += error;
             }
         }
+        println!("📊 Erro acumulado total: {:?}", acc);
         acc
     }
 
-    pub fn suggest_next_sprint_targets(&self, remaining_sprints: usize) -> HashMap<String, f64> {
+    pub fn suggest_next_sprint_targets(&self, _remaining_sprints: usize) -> HashMap<String, f64> {
         let mut suggestions: HashMap<String, f64> = HashMap::new();
-        if remaining_sprints == 0 {
-            return suggestions;
-        }
-        // total de sprints planejados = já executados + remaining
-        let total_sprints = (self.sprints.len() + remaining_sprints) as f64;
-        let mut actual_totals: HashMap<String, f64> = HashMap::new();
-        for sprint in &self.sprints {
-            for item in &sprint.itens {
-                let id = item.item.id.clone();
-                let actual = item.actual.unwrap_or(0.0);
-                *actual_totals.entry(id).or_insert(0.0) += actual;
-            }
-        }
+        
+        println!("\n🎯 CALCULANDO SUGESTÕES PARA PRÓXIMO SPRINT");
+        println!("📝 Total de sprints executados: {}", self.sprints.len());
+        
+        // Acumula divergências (erro acumulado) por item
+        let accumulated_errors = self.accumulate_divergences();
+        
         for item_formula in &self.formula.itens {
             let id = item_formula.item.id.clone();
-            // Interpretação: `item_formula.peso` é o valor POR SPRINT (não uma proporção)
-            let per_sprint_expected = item_formula.peso;
-            let expected_total = per_sprint_expected * total_sprints;
-            let actual_so_far = actual_totals.get(&id).cloned().unwrap_or(0.0);
-            let error = expected_total - actual_so_far;
+            let nome = &item_formula.item.nome;
+            // Peso base por sprint da fórmula
+            let base_weight = item_formula.peso;
+            
+            // Erro acumulado deste item em todos os sprints anteriores
+            let accumulated_error = accumulated_errors.get(&id).cloned().unwrap_or(0.0);
+            
+            // Sugestão = peso_base - erro_acumulado
+            // Se acumulou +1.5kg de excesso, próximo sprint sugere -1.5kg
+            let mut suggested_next = base_weight - accumulated_error;
 
-            // O objetivo por sprint base é o próprio `per_sprint_expected`.
-            let base_per_sprint = per_sprint_expected;
-            let per_sprint_correction = if remaining_sprints > 0 { error / (remaining_sprints as f64) } else { 0.0 };
+            println!("🎯 Item {}: base={:.2}kg, erro_acumulado={:.2}kg, sugestão={:.2}kg", 
+                     nome, base_weight, accumulated_error, suggested_next);
 
-            let mut suggested_next = base_per_sprint + per_sprint_correction;
-
-            // Protege contra NaN / infinito / desvios extremos
+            // Protege contra NaN / infinito
             if !suggested_next.is_finite() {
                 suggested_next = 0.0;
             }
-            // Clamp para evitar números absurdos
-            suggested_next = suggested_next.clamp(-1e12, 1e12);
+            // Clamp para evitar números absurdos (não pode ser negativo)
+            suggested_next = suggested_next.max(0.0).min(1e12);
 
             suggestions.insert(id, suggested_next);
         }
@@ -176,7 +187,7 @@ mod tests {
         let suggestions = processo.suggest_next_sprint_targets(1);
         let a = suggestions.get(&item_a.id).unwrap();
         let b = suggestions.get(&item_b.id).unwrap();
-        assert!((*a - 58.5).abs() < 1e-6, "A sugerido {} != 58.5", a);
-        assert!((*b - 41.0).abs() < 1e-6, "B sugerido {} != 41.0", b);
+        assert!((*a - 28.5).abs() < 1e-6, "A sugerido {} != 28.5", a);
+        assert!((*b - 21.0).abs() < 1e-6, "B sugerido {} != 21.0", b);
     }
 }

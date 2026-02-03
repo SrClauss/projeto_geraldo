@@ -41,8 +41,12 @@ export default function DashboardView() {
     let erro = 0;
     for (const sprint of processo.sprints) {
       for (const item of sprint.itens) {
-        const divergencia = (item.actual || 0) - item.target;
-        erro += divergencia;
+        // Encontra peso base do item na fórmula
+        const itemFormula = processo.formula?.itens?.find((fi: any) => fi.item.id === item.item.id);
+        const baseWeight = itemFormula?.peso || 0;
+        // Erro = actual - base_weight (NÃO usar target!)
+        const erro_item = (item.actual || 0) - baseWeight;
+        erro += erro_item;
       }
     }
     return erro;
@@ -147,6 +151,19 @@ export default function DashboardView() {
                       }
                     }}
                   />
+                  {processo.sprints.length > 0 && (
+                    <DefaultButton
+                      text="📊 Ver Dashboard"
+                      onClick={() => navigate('processo-dashboard', { processoId: processo.id })}
+                      styles={{
+                        root: {
+                          width: '100%',
+                          height: '36px',
+                          marginTop: '8px'
+                        }
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             );

@@ -64,9 +64,23 @@ export default function ProcessosView() {
     return status.toLowerCase() === 'terminado' || status.toLowerCase() === 'finalizado';
   };
 
-  const handleAddSprint = (processo: Processo) => {
-    // navega para criação de sprint passando o processo como payload
-    navigate('novo-sprint', { processoId: processo.id, processoNome: processo.nome });
+  const handleAddSprint = async (processo: Processo) => {
+    try {
+      const sprint = await invoke<any>('create_sprint_for_processo', {
+        processoId: processo.id,
+        remainingSprints: 1,
+        operadorUsername: 'admin'
+      });
+      navigate('execucao-sprint', {
+        processoId: processo.id,
+        processoNome: processo.nome,
+        sprint: sprint,
+        sprintItems: sprint.itens
+      });
+    } catch (error) {
+      console.error('Erro ao criar sprint:', error);
+      alert('Erro ao criar sprint: ' + error);
+    }
   };
 
 
@@ -112,6 +126,24 @@ export default function ProcessosView() {
     }
   };
 
+  const handleDeleteProcesso = async (processo: Processo) => {
+    if (!confirm(`⚠️ ATENÇÃO: Deseja DELETAR permanentemente o processo "${processo.nome}"?\n\nTodos os sprints serão perdidos!\n\nEsta ação NÃO pode ser desfeita!`)) {
+      return;
+    }
+
+    try {
+      await invoke('delete_processo', { processoId: processo.id });
+      await loadProcessos();
+    } catch (error) {
+      console.error('Erro ao deletar processo:', error);
+      alert('Erro ao deletar processo: ' + error);
+    }
+  };
+
+  const handleViewDashboard = (processo: Processo) => {
+    navigate('processo-dashboard', { processoId: processo.id });
+  };
+
   const columns: IColumn[] = [
     {
       key: 'nome',
@@ -150,17 +182,18 @@ export default function ProcessosView() {
     {
       key: 'actions',
       name: 'Ações',
-      minWidth: 250,
-      maxWidth: 300,
+      minWidth: 400,
+      maxWidth: 500,
       onRender: (item: Processo) => (
-        <Stack horizontal tokens={{ childrenGap: 8 }}>
+        <Stack horizontal tokens={{ childrenGap: 8 }} wrap>
           <PrimaryButton
-            text="Adicionar Sprint"
+            text="➕ Sprint"
             disabled={isProcessoTerminado(item.status)}
             styles={{
               root: {
                 backgroundColor: isProcessoTerminado(item.status) ? '#ccc' : '#0078d4',
                 border: 'none',
+                height: '32px'
               },
               rootHovered: {
                 backgroundColor: isProcessoTerminado(item.status) ? '#ccc' : '#106ebe',
@@ -169,11 +202,36 @@ export default function ProcessosView() {
             onClick={() => handleAddSprint(item)}
           />
           {!isProcessoTerminado(item.status) && (
-            <DefaultButton
-              text="Finalizar"
-              onClick={() => handleFinalizeProcesso(item)}
-            />
+            <>
+              <DefaultButton
+                text="✅ Finalizar"
+                onClick={() => handleFinalizeProcesso(item)}
+                styles={{ root: { height: '32px' } }}
+              />
+              {item.sprints.length > 0 && (
+                <DefaultButton
+                  text="📊 Dashboard"
+                  onClick={() => handleViewDashboard(item)}
+                  styles={{ root: { height: '32px' } }}
+                />
+              )}
+            </>
           )}
+          <DefaultButton
+            text="🗑️ Deletar"
+            onClick={() => handleDeleteProcesso(item)}
+            styles={{ 
+              root: { 
+                backgroundColor: '#d13438',
+                color: 'white',
+                border: 'none',
+                height: '32px'
+              },
+              rootHovered: {
+                backgroundColor: '#a80000'
+              }
+            }}
+          />
         </Stack>
       )
     }

@@ -4,6 +4,7 @@ use models::processo::Processo;
 use models::formula::Formula;
 use models::fornecedor::Fornecedor;
 use models::item::Item;
+use crate::models::auditable::Auditable;
 use std::collections::HashMap;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -239,6 +240,25 @@ fn finalize_processo(processo_id: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn delete_processo(processo_id: String) -> Result<(), String> {
+    let db = models::connect_db();
+    Processo::delete(&processo_id, &db).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn clear_processo_sprints(processo_id: String) -> Result<(), String> {
+    let db = models::connect_db();
+    let mut processo = match get_processo(processo_id)? {
+        Some(p) => p,
+        None => return Err("Processo não encontrado".to_string())
+    };
+    processo.sprints.clear();
+    processo.touch();
+    processo.save(&db).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // inicializa DB e cria admin se necessário
@@ -260,6 +280,8 @@ pub fn run() {
             create_sprint_for_processo,
             save_sprint_to_processo,
             finalize_processo,
+            delete_processo,
+            clear_processo_sprints,
             create_fornecedor,
             create_item,
             create_formula,

@@ -16,6 +16,7 @@ import NewUserView from './views/NewUserView';
 import NewProcessView from './views/NewProcessView';
 import NewSprintView from './views/NewSprintView';
 import SprintExecutionView from './views/SprintExecutionView';
+import ProcessoDashboardView from './views/ProcessoDashboardView';
 
 function SprintExecutionWrapper() {
   const { payload, navigate } = useNavigation();
@@ -26,8 +27,8 @@ function SprintExecutionWrapper() {
       processoNome={payload?.processoNome}
       sprint={payload?.sprint}
       sprintItems={payload?.sprintItems}
-      onComplete={() => navigate('home')}
-      onCancel={() => navigate('home')}
+      onComplete={() => navigate('processo-dashboard', { processoId: payload?.processoId })}
+      onCancel={() => navigate('processo-dashboard', { processoId: payload?.processoId })}
     />
   );
 }
@@ -62,6 +63,8 @@ function Content() {
       return <NewSprintView />;
     case 'execucao-sprint':
       return <SprintExecutionWrapper />;
+    case 'processo-dashboard':
+      return <ProcessoDashboardView />;
     case 'home':
       return <DashboardView />;
     default:

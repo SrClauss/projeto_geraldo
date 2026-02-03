@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ProgressIndicator, TextField, PrimaryButton, DefaultButton } from '@fluentui/react';
+import { invoke } from '@tauri-apps/api/core';
 import './SprintExecutionView.css';
 
 interface SprintItem {
@@ -30,12 +31,11 @@ interface Props {
 }
 
 export default function SprintExecutionView({ processoId, processoNome, sprintItems, sprint, onComplete, onCancel }: Props) {
-  // `processoId` está disponível se precisarmos referenciar o processo (por exemplo logs)
-  void processoId;
   const [items, setItems] = useState<SprintItem[]>(sprintItems);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentWeight, setCurrentWeight] = useState('');
   const [updatedSprint, setUpdatedSprint] = useState<Sprint>(sprint);
+  const [isSaving, setIsSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -90,10 +90,37 @@ export default function SprintExecutionView({ processoId, processoNome, sprintIt
   };
 
   const finalizeSprint = async (finalSprint: Sprint) => {
-    console.log('Sprint finalizado com itens:', finalSprint);
-    // Atualiza estado e chama callback que salvará no backend
-    setUpdatedSprint(finalSprint);
-    onComplete();
+    try {
+      setIsSaving(true);
+      console.log('Salvando sprint com itens:', finalSprint);
+      
+      // Salvar sprint no backend
+      await invoke('save_sprint_to_processo', {
+        processoId: processoId,
+        sprint: finalSprint
+      });
+      
+      console.log('Sprint salvo com sucesso! Criando próximo sprint...');
+      
+      // Criar automaticamente o próximo sprint
+      const nextSprint = await invoke<any>('create_sprint_for_processo', {
+        processoId: processoId,
+        remainingSprints: 1,
+        operadorUsername: 'admin'
+      });
+      
+      console.log('Próximo sprint criado:', nextSprint);
+      
+      // Sprint salvo com sucesso - voltar para dashboard do processo
+      setIsSaving(false);
+      onComplete();
+      
+    } catch (error) {
+      console.error('Erro ao salvar/criar sprint:', error);
+      alert('❌ Erro ao salvar sprint: ' + error);
+      setIsSaving(false);
+      onComplete(); // Em caso de erro, volta ao dashboard
+    }
   };
 
   const getDivergence = (item: SprintItem): number | null => {
@@ -105,8 +132,9 @@ export default function SprintExecutionView({ processoId, processoNome, sprintIt
     <div className="sprint-execution-container">
       <div className="sprint-header">
         <div className="sprint-title-section">
-          <h1>Sprint #{sprint.numero}</h1>
+          <h1>Sprint #{updatedSprint.numero}</h1>
           <h2>{processoNome}</h2>
+          {isSaving && <div style={{ color: '#0078d4', fontSize: '16px', marginTop: '8px' }}>💾 Salvando e preparando próximo sprint...</div>}
         </div>
         <div className="sprint-progress-section">
           <div className="progress-label">Item {completedItems + 1} de {totalItems}</div>
@@ -154,8 +182,9 @@ export default function SprintExecutionView({ processoId, processoNome, sprintIt
           </div>
           <div className="action-buttons">
             <PrimaryButton
-              text={currentIndex < totalItems - 1 ? '➡️ Próximo Item' : '✅ Finalizar Sprint'}
+              text={isSaving ? '💾 Salvando...' : currentIndex < totalItems - 1 ? '➡️ Próximo Item' : '✅ Finalizar Sprint'}
               onClick={handleNext}
+              disabled={isSaving}
               styles={{ 
                 root: { 
                   fontSize: '20px', 
@@ -169,6 +198,7 @@ export default function SprintExecutionView({ processoId, processoNome, sprintIt
             <DefaultButton
               text="❌ Cancelar"
               onClick={onCancel}
+              disabled={isSaving}
               styles={{ 
                 root: { 
                   fontSize: '18px', 
