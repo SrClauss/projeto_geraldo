@@ -164,6 +164,7 @@ fn search_users(name: String, page: usize, page_size: usize) -> Result<Vec<model
     models::user::User::list_by_name(&name, &db, page, page_size).map_err(|e| e.to_string())
 }
 
+#[allow(dead_code)]
 #[tauri::command]
 fn list_users(page: usize, page_size: usize) -> Result<Vec<models::user::User>, String> {
     let db = models::connect_db();

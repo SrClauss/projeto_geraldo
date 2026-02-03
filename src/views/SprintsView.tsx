@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { DetailsList, IColumn, Dropdown, IDropdownOption, IconButton } from '@fluentui/react';
+import { Dropdown, IDropdownOption } from '@fluentui/react';
 
 interface Processo {
   id: string;
@@ -116,88 +116,6 @@ export default function SprintsView() {
     ...processos.map(p => ({ key: p.id, text: p.nome }))
   ];
 
-  const columns: IColumn[] = [
-    {
-      key: 'expand',
-      name: '',
-      minWidth: 40,
-      maxWidth: 40,
-      onRender: (item: SprintRow) => (
-        <IconButton
-          iconProps={{ iconName: expandedRows.has(item.sprintId) ? 'ChevronDown' : 'ChevronRight' }}
-          onClick={() => toggleExpand(item.sprintId)}
-          title="Expandir detalhes"
-        />
-      )
-    },
-    {
-      key: 'processoNome',
-      name: 'Processo',
-      fieldName: 'processoNome',
-      minWidth: 150,
-      maxWidth: 250,
-      isResizable: true,
-    },
-    {
-      key: 'sprintNumero',
-      name: 'Sprint #',
-      fieldName: 'sprintNumero',
-      minWidth: 80,
-      maxWidth: 100,
-      isResizable: true,
-    },
-    {
-      key: 'totalItens',
-      name: 'Itens',
-      fieldName: 'totalItens',
-      minWidth: 60,
-      maxWidth: 80,
-      isResizable: true,
-    },
-    {
-      key: 'pesoAlvo',
-      name: 'Peso Alvo (kg)',
-      fieldName: 'pesoAlvo',
-      minWidth: 120,
-      maxWidth: 150,
-      isResizable: true,
-      onRender: (item: SprintRow) => <span>{item.pesoAlvo.toFixed(2)}</span>
-    },
-    {
-      key: 'pesoReal',
-      name: 'Peso Real (kg)',
-      fieldName: 'pesoReal',
-      minWidth: 120,
-      maxWidth: 150,
-      isResizable: true,
-      onRender: (item: SprintRow) => <span>{item.pesoReal.toFixed(2)}</span>
-    },
-    {
-      key: 'divergencia',
-      name: 'Divergência (kg)',
-      fieldName: 'divergencia',
-      minWidth: 130,
-      maxWidth: 160,
-      isResizable: true,
-      onRender: (item: SprintRow) => (
-        <span style={{ 
-          color: item.divergencia >= 0 ? '#d13438' : '#107c10',
-          fontWeight: 600
-        }}>
-          {item.divergencia >= 0 ? '+' : ''}{item.divergencia.toFixed(2)}
-        </span>
-      )
-    },
-    {
-      key: 'data',
-      name: 'Data/Hora',
-      fieldName: 'data',
-      minWidth: 150,
-      maxWidth: 200,
-      isResizable: true,
-    }
-  ];
-
   if (loading) {
     return (
       <div className="view-container">
@@ -243,10 +161,9 @@ export default function SprintsView() {
                 }}
                 onClick={() => toggleExpand(row.sprintId)}
                 >
-                  <IconButton
-                    iconProps={{ iconName: expandedRows.has(row.sprintId) ? 'ChevronDown' : 'ChevronRight' }}
-                    styles={{ root: { height: 24 } }}
-                  />
+                  <span style={{ marginRight: '8px' }}>
+                    {expandedRows.has(row.sprintId) ? '▼' : '▶'}
+                  </span>
                   <span>{row.processoNome}</span>
                   <span>{row.sprintNumero}</span>
                   <span>{row.totalItens}</span>

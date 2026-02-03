@@ -10,7 +10,7 @@ import {
   shorthands,
   tokens,
 } from '@fluentui/react-components';
-import { DismissRegular, WarningRegular } from '@fluentui/react-icons';
+import { WarningRegular } from '@fluentui/react-icons';
 
 const useStyles = makeStyles({
   container: {
