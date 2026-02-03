@@ -17,6 +17,7 @@ import NewProcessView from './views/NewProcessView';
 import NewSprintView from './views/NewSprintView';
 import SprintExecutionView from './views/SprintExecutionView';
 import ProcessoDashboardView from './views/ProcessoDashboardView';
+import { TrialChecker } from './components/TrialChecker';
 
 function SprintExecutionWrapper() {
   const { payload, navigate } = useNavigation();
@@ -75,14 +76,16 @@ function Content() {
 function App() {
   return (
     <NavigationProvider>
-      <div className="app-root">
-        <div className="app-layout">
-          <Sidebar />
-          <div className="content">
-            <Content />
+      <TrialChecker>
+        <div className="app-root">
+          <div className="app-layout">
+            <Sidebar />
+            <div className="content">
+              <Content />
+            </div>
           </div>
         </div>
-      </div>
+      </TrialChecker>
     </NavigationProvider>
   );
 }

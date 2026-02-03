@@ -1,4 +1,5 @@
 mod models;
+mod trial;
 
 use models::processo::Processo;
 use models::formula::Formula;
@@ -8,6 +9,16 @@ use crate::models::auditable::Auditable;
 use std::collections::HashMap;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+
+#[tauri::command]
+fn check_trial_status() -> Result<(), String> {
+    trial::check_trial()
+}
+
+#[tauri::command]
+fn get_trial_info() -> Result<(i64, String), String> {
+    trial::get_trial_info()
+}
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -270,6 +281,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
+            check_trial_status,
+            get_trial_info,
             greet,
             list_processos,
             get_processo,
